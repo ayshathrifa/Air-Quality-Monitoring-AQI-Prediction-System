@@ -1,0 +1,229 @@
+╔══════════════════════════════════════════════════════════════════╗
+║          NOTIFICATION TROUBLESHOOTING GUIDE                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+🔔 Test Notification Button Not Working? Follow these steps:
+
+═══════════════════════════════════════════════════════════════════
+
+STEP 1: CHECK BROWSER SUPPORT
+═══════════════════════════════════════════════════════════════════
+
+Open Browser Console (F12) → Console Tab
+Type: Notification.permission
+
+RESULT:
+✅ "granted" = Notifications allowed
+⚠️ "default" = Not asked yet
+❌ "denied" = Blocked by user
+
+═══════════════════════════════════════════════════════════════════
+
+STEP 2: ENABLE NOTIFICATIONS IN BROWSER
+═══════════════════════════════════════════════════════════════════
+
+CHROME / EDGE:
+1. Click 🔒 (lock icon) in address bar
+2. Find "Notifications"
+3. Change to "Allow"
+4. Refresh page (F5)
+
+FIREFOX:
+1. Click 🔒 in address bar
+2. Click "Permissions" tab
+3. Find "Notifications"
+4. Select "Allow"
+5. Refresh page (F5)
+
+═══════════════════════════════════════════════════════════════════
+
+STEP 3: TEST MANUALLY IN CONSOLE
+═══════════════════════════════════════════════════════════════════
+
+Open Console (F12) → Paste this:
+
+Notification.requestPermission().then(p => {
+    if (p === 'granted') {
+        new Notification('Test', {body: 'It works!'});
+    }
+});
+
+If popup appears = Notifications work!
+If nothing = Check browser settings
+
+═══════════════════════════════════════════════════════════════════
+
+STEP 4: CLICK TEST BUTTON WITH CONSOLE OPEN
+═══════════════════════════════════════════════════════════════════
+
+1. Open Console (F12)
+2. Click "🔔 Test Notification" button
+3. Watch console for messages:
+   - "Test notification button clicked"
+   - "Notification permission: granted"
+   - "Sending test notification..."
+
+4. Check for errors in red
+
+═══════════════════════════════════════════════════════════════════
+
+COMMON ISSUES & FIXES
+═══════════════════════════════════════════════════════════════════
+
+ISSUE 1: Button does nothing
+FIX:
+- Hard refresh: Ctrl + Shift + R
+- Check console for JavaScript errors
+- Make sure script.js is loaded
+
+ISSUE 2: "Notifications blocked" alert
+FIX:
+- Go to browser settings
+- Search for "Notifications"
+- Find localhost:5000
+- Change to "Allow"
+
+ISSUE 3: Permission popup doesn't appear
+FIX:
+- Clear browser cache
+- Close and reopen browser
+- Try incognito/private mode
+
+ISSUE 4: Notification appears but disappears quickly
+FIX:
+- This is normal! Notifications auto-dismiss
+- Check notification center:
+  - Windows: Click 🔔 in taskbar
+  - Mac: Top-right corner
+
+═══════════════════════════════════════════════════════════════════
+
+BROWSER-SPECIFIC SETTINGS
+═══════════════════════════════════════════════════════════════════
+
+CHROME:
+chrome://settings/content/notifications
+- Find localhost:5000
+- Set to "Allow"
+
+EDGE:
+edge://settings/content/notifications
+- Find localhost:5000
+- Set to "Allow"
+
+FIREFOX:
+about:preferences#privacy
+- Scroll to "Permissions"
+- Click "Settings" next to Notifications
+- Find localhost:5000
+- Change to "Allow"
+
+═══════════════════════════════════════════════════════════════════
+
+WINDOWS NOTIFICATION SETTINGS
+═══════════════════════════════════════════════════════════════════
+
+1. Open Windows Settings
+2. System → Notifications
+3. Make sure notifications are ON
+4. Find your browser (Chrome/Edge/Firefox)
+5. Make sure it's enabled
+
+═══════════════════════════════════════════════════════════════════
+
+TESTING SEQUENCE
+═══════════════════════════════════════════════════════════════════
+
+TEST 1: Console Test
+F12 → Console → Type:
+new Notification('Test', {body: 'Hello'});
+
+Expected: Popup appears
+If not: Permissions issue
+
+TEST 2: Button Test
+1. Click "🔔 Test Notification"
+2. Should see alert: "✅ Notification sent!"
+3. Check top-right corner for popup
+
+TEST 3: AQI Alert Test
+1. Enter Delhi: 28.6139, 77.2090
+2. Click "Check Air Quality"
+3. AQI will be 4 (Unhealthy)
+4. Notification should appear automatically
+
+═══════════════════════════════════════════════════════════════════
+
+WHAT YOU SHOULD SEE
+═══════════════════════════════════════════════════════════════════
+
+WHEN BUTTON WORKS:
+1. Click button
+2. Alert: "✅ Notification sent!"
+3. Popup in top-right corner:
+   ┌──────────────────────────┐
+   │ 🔔 Test Notification     │
+   │ ────────────────────────  │
+   │ Notifications are        │
+   │ working! You will see    │
+   │ alerts when AQI becomes  │
+   │ unhealthy.               │
+   └──────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════
+
+STILL NOT WORKING?
+═══════════════════════════════════════════════════════════════════
+
+TRY THESE:
+
+1. Different Browser
+   - Try Chrome if using Firefox
+   - Try Edge if using Chrome
+
+2. Incognito Mode
+   - Open incognito/private window
+   - Go to localhost:5000
+   - Try test button
+
+3. Check Windows Focus Assist
+   - Windows Settings → Focus Assist
+   - Set to "Off"
+
+4. Restart Browser
+   - Close ALL browser windows
+   - Reopen and try again
+
+5. Check Antivirus/Firewall
+   - Some security software blocks notifications
+   - Temporarily disable and test
+
+═══════════════════════════════════════════════════════════════════
+
+VERIFICATION CHECKLIST
+═══════════════════════════════════════════════════════════════════
+
+□ Browser supports notifications (check console)
+□ Notification permission is "granted"
+□ Browser notifications enabled in settings
+□ Windows notifications enabled
+□ Focus Assist is OFF
+□ No JavaScript errors in console
+□ Hard refresh done (Ctrl + Shift + R)
+
+If ALL checked and still not working:
+→ Try different browser
+→ Try on different computer
+
+═══════════════════════════════════════════════════════════════════
+
+QUICK FIX SUMMARY
+═══════════════════════════════════════════════════════════════════
+
+1. Refresh page: Ctrl + Shift + R
+2. Click lock icon → Allow notifications
+3. Click test button
+4. Check top-right corner of screen
+5. If nothing, check Windows notification center
+
+═══════════════════════════════════════════════════════════════════

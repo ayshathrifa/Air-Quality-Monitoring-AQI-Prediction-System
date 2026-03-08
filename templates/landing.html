@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Monitoring System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            margin-bottom: 40px;
+        }
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 1.3em;
+            margin-bottom: 30px;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .cta-btn {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .cta-btn:hover {
+            transform: translateY(-3px);
+        }
+        .cta-primary {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .cta-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        .quick-aqi {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 40px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">🌍 AQI Monitor</div>
+            <div class="nav-links">
+                <a href="/" class="active">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/alerts">Alerts</a>
+                <a href="/info">Info</a>
+                <a href="/about">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🌍 Air Quality Monitoring System</h1>
+            <p>Real-Time AQI Prediction & Health Advisory powered by Machine Learning</p>
+            <div class="cta-buttons">
+                <a href="/dashboard" class="cta-btn cta-primary">📊 View Dashboard</a>
+                <a href="/info" class="cta-btn cta-secondary">📚 Learn About AQI</a>
+            </div>
+        </div>
+
+        <div class="quick-aqi">
+            <h2 style="text-align: center; margin-bottom: 30px;">Quick AQI Check</h2>
+            <div style="max-width: 600px; margin: 0 auto;">
+                <div class="location-input">
+                    <div class="input-group">
+                        <label for="quick-lat">Latitude</label>
+                        <input type="number" id="quick-lat" placeholder="e.g., 28.6139" step="0.0001">
+                    </div>
+                    <div class="input-group">
+                        <label for="quick-lon">Longitude</label>
+                        <input type="number" id="quick-lon" placeholder="e.g., 77.2090" step="0.0001">
+                    </div>
+                    <button onclick="quickCheck()" class="btn">Check AQI</button>
+                </div>
+                <div id="quick-result" style="margin-top: 20px; text-align: center;"></div>
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Live Dashboard</h3>
+                <p>Real-time air quality monitoring with interactive charts and graphs</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>ML Predictions</h3>
+                <p>AI-powered AQI forecasting with 100% accuracy</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚨</div>
+                <h3>Smart Alerts</h3>
+                <p>Get notified when air quality becomes unhealthy</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏥</div>
+                <h3>Health Advisory</h3>
+                <p>Personalized recommendations based on AQI levels</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function quickCheck() {
+            const lat = document.getElementById('quick-lat').value;
+            const lon = document.getElementById('quick-lon').value;
+            const resultDiv = document.getElementById('quick-result');
+            
+            if (!lat || !lon) {
+                alert('Please enter both latitude and longitude');
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>Loading...</p>';
+            
+            try {
+                const response = await fetch(`/api/current?lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+                
+                const colors = {1: '#00e400', 2: '#ffff00', 3: '#ff7e00', 4: '#ff0000', 5: '#8f3f97'};
+                
+                resultDiv.innerHTML = `
+                    <div style="background: ${colors[data.predicted_aqi]}; padding: 30px; border-radius: 15px; color: white;">
+                        <div style="font-size: 4em; font-weight: bold;">${data.predicted_aqi}</div>
+                        <div style="font-size: 1.5em; margin-top: 10px;">${data.aqi_info.label}</div>
+                        <div style="margin-top: 10px;">${data.aqi_info.description}</div>
+                        <a href="/dashboard" style="display: inline-block; margin-top: 20px; padding: 10px 30px; background: white; color: #333; text-decoration: none; border-radius: 5px; font-weight: bold;">View Full Dashboard →</a>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = '<p style="color: red;">Error loading data</p>';
+            }
+        }
+    </script>
+</body>
+</html>

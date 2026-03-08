@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info - Air Quality Monitoring</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">🌍 AQI Monitor</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/alerts">Alerts</a>
+                <a href="/info" class="active">Info</a>
+                <a href="/about">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>📚 AQI Information & Health Tips</h1>
+            <p>Understanding Air Quality Index</p>
+        </header>
+
+        <div class="main-content">
+            <!-- AQI Categories -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>🎨 AQI Categories</h2>
+                <div style="display: grid; gap: 15px;">
+                    <div style="background: #00e400; color: white; padding: 20px; border-radius: 10px;">
+                        <h3>🟢 AQI 1 - Good</h3>
+                        <p><strong>PM2.5:</strong> 0-12 µg/m³</p>
+                        <p>Air quality is satisfactory, and air pollution poses little or no risk.</p>
+                    </div>
+                    <div style="background: #ffff00; color: #333; padding: 20px; border-radius: 10px;">
+                        <h3>🟡 AQI 2 - Moderate</h3>
+                        <p><strong>PM2.5:</strong> 12.1-35.4 µg/m³</p>
+                        <p>Air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.</p>
+                    </div>
+                    <div style="background: #ff7e00; color: white; padding: 20px; border-radius: 10px;">
+                        <h3>⚠️ AQI 3 - Unhealthy for Sensitive Groups</h3>
+                        <p><strong>PM2.5:</strong> 35.5-55.4 µg/m³</p>
+                        <p>Members of sensitive groups may experience health effects. The general public is less likely to be affected.</p>
+                    </div>
+                    <div style="background: #ff0000; color: white; padding: 20px; border-radius: 10px;">
+                        <h3>🚨 AQI 4 - Unhealthy</h3>
+                        <p><strong>PM2.5:</strong> 55.5-150.4 µg/m³</p>
+                        <p>Some members of the general public may experience health effects; members of sensitive groups may experience more serious health effects.</p>
+                    </div>
+                    <div style="background: #8f3f97; color: white; padding: 20px; border-radius: 10px;">
+                        <h3>🔴 AQI 5 - Very Unhealthy</h3>
+                        <p><strong>PM2.5:</strong> >150.4 µg/m³</p>
+                        <p>Health alert: The risk of health effects is increased for everyone.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pollutants Explained -->
+            <div class="card">
+                <h2>💨 Pollutants Explained</h2>
+                <div style="line-height: 1.8;">
+                    <p><strong>PM2.5:</strong> Fine particles ≤2.5 micrometers. Can penetrate deep into lungs.</p>
+                    <p><strong>PM10:</strong> Particles ≤10 micrometers. Causes respiratory issues.</p>
+                    <p><strong>CO:</strong> Carbon Monoxide. Reduces oxygen delivery to organs.</p>
+                    <p><strong>NO2:</strong> Nitrogen Dioxide. Irritates airways.</p>
+                    <p><strong>O3:</strong> Ozone. Causes breathing problems.</p>
+                    <p><strong>SO2:</strong> Sulfur Dioxide. Affects respiratory system.</p>
+                </div>
+            </div>
+
+            <!-- Health Tips -->
+            <div class="card">
+                <h2>🏥 Health Tips by AQI Level</h2>
+                <div style="line-height: 1.8;">
+                    <h4 style="color: #00e400;">Good (1-2)</h4>
+                    <ul>
+                        <li>Perfect for outdoor activities</li>
+                        <li>Enjoy exercise and sports</li>
+                        <li>Open windows for fresh air</li>
+                    </ul>
+                    
+                    <h4 style="color: #ff7e00;">Moderate to Unhealthy (3)</h4>
+                    <ul>
+                        <li>Limit prolonged outdoor exertion</li>
+                        <li>Children and elderly stay indoors</li>
+                        <li>Consider wearing a mask</li>
+                    </ul>
+                    
+                    <h4 style="color: #ff0000;">Unhealthy (4)</h4>
+                    <ul>
+                        <li>Avoid outdoor activities</li>
+                        <li>Wear N95 mask if going out</li>
+                        <li>Close windows and doors</li>
+                        <li>Use air purifiers indoors</li>
+                        <li>Asthma patients keep inhalers ready</li>
+                    </ul>
+                    
+                    <h4 style="color: #8f3f97;">Very Unhealthy (5)</h4>
+                    <ul>
+                        <li>STAY INDOORS!</li>
+                        <li>Avoid all outdoor activities</li>
+                        <li>Use N95/N99 masks if must go out</li>
+                        <li>Keep windows closed</li>
+                        <li>Run air purifiers on high</li>
+                        <li>Vulnerable groups consult doctors</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Vulnerable Groups -->
+            <div class="card">
+                <h2>👥 Vulnerable Groups</h2>
+                <p>These groups are more sensitive to air pollution:</p>
+                <ul style="line-height: 1.8;">
+                    <li>👶 Children and infants</li>
+                    <li>👴 Elderly people (65+)</li>
+                    <li>🫁 People with asthma or respiratory diseases</li>
+                    <li>❤️ People with heart disease</li>
+                    <li>🤰 Pregnant women</li>
+                    <li>🏃 Outdoor workers and athletes</li>
+                </ul>
+            </div>
+
+            <!-- Protection Measures -->
+            <div class="card">
+                <h2>🛡️ Protection Measures</h2>
+                <ul style="line-height: 1.8;">
+                    <li>✅ Wear N95/N99 masks when AQI is high</li>
+                    <li>✅ Use air purifiers with HEPA filters</li>
+                    <li>✅ Keep indoor plants (natural air purifiers)</li>
+                    <li>✅ Avoid smoking indoors</li>
+                    <li>✅ Monitor AQI regularly</li>
+                    <li>✅ Stay hydrated</li>
+                    <li>✅ Eat antioxidant-rich foods</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

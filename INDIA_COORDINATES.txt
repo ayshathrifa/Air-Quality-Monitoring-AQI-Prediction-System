@@ -1,0 +1,233 @@
+╔══════════════════════════════════════════════════════════════════╗
+║        INDIAN CITIES COORDINATES - QUICK REFERENCE               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Copy these coordinates to test air quality across India!
+
+═══════════════════════════════════════════════════════════════════
+
+🏔️ NORTH INDIA (HIMALAYAN REGION) - Clean Mountain Air
+═══════════════════════════════════════════════════════════════════
+
+KASHMIR (Srinagar)
+Latitude:  34.0837
+Longitude: 74.7973
+Expected AQI: 1-2 (Good to Moderate) 🟢
+
+SHIMLA, Himachal Pradesh
+Latitude:  31.1048
+Longitude: 77.1734
+Expected AQI: 1-2 (Good to Moderate) 🟢
+
+DEHRADUN, Uttarakhand
+Latitude:  30.3165
+Longitude: 78.0322
+Expected AQI: 2 (Moderate) 🟡
+
+═══════════════════════════════════════════════════════════════════
+
+🏙️ NORTH INDIA (PLAINS) - High Pollution
+═══════════════════════════════════════════════════════════════════
+
+DELHI
+Latitude:  28.6139
+Longitude: 77.2090
+Expected AQI: 4 (Unhealthy) 🔴
+
+CHANDIGARH
+Latitude:  30.7333
+Longitude: 76.7794
+Expected AQI: 3 (Unhealthy for Sensitive) 🟠
+
+LUCKNOW, Uttar Pradesh
+Latitude:  26.8467
+Longitude: 80.9462
+Expected AQI: 3-4 (Unhealthy) 🟠
+
+JAIPUR, Rajasthan
+Latitude:  26.9124
+Longitude: 75.7873
+Expected AQI: 3 (Unhealthy for Sensitive) 🟠
+
+AMRITSAR, Punjab
+Latitude:  31.6340
+Longitude: 74.8723
+Expected AQI: 3 (Unhealthy for Sensitive) 🟠
+
+═══════════════════════════════════════════════════════════════════
+
+🌾 CENTRAL INDIA - Moderate Pollution
+═══════════════════════════════════════════════════════════════════
+
+BHOPAL, Madhya Pradesh
+Latitude:  23.2599
+Longitude: 77.4126
+Expected AQI: 2-3 (Moderate) 🟡
+
+NAGPUR, Maharashtra
+Latitude:  21.1458
+Longitude: 79.0882
+Expected AQI: 2-3 (Moderate) 🟡
+
+INDORE, Madhya Pradesh
+Latitude:  22.7196
+Longitude: 75.8577
+Expected AQI: 2-3 (Moderate) 🟡
+
+═══════════════════════════════════════════════════════════════════
+
+🏖️ WEST INDIA - Coastal Areas
+═══════════════════════════════════════════════════════════════════
+
+MUMBAI, Maharashtra
+Latitude:  19.0760
+Longitude: 72.8777
+Expected AQI: 2-3 (Moderate) 🟡
+
+PUNE, Maharashtra
+Latitude:  18.5204
+Longitude: 73.8567
+Expected AQI: 2 (Moderate) 🟡
+
+AHMEDABAD, Gujarat
+Latitude:  23.0225
+Longitude: 72.5714
+Expected AQI: 3 (Unhealthy for Sensitive) 🟠
+
+GOA
+Latitude:  15.2993
+Longitude: 74.1240
+Expected AQI: 1-2 (Good) 🟢
+
+═══════════════════════════════════════════════════════════════════
+
+🌴 SOUTH INDIA - Better Air Quality
+═══════════════════════════════════════════════════════════════════
+
+BANGALORE, Karnataka
+Latitude:  12.9716
+Longitude: 77.5946
+Expected AQI: 2 (Moderate) 🟡
+
+CHENNAI, Tamil Nadu
+Latitude:  13.0827
+Longitude: 80.2707
+Expected AQI: 2 (Moderate) 🟡
+
+HYDERABAD, Telangana
+Latitude:  17.3850
+Longitude: 78.4867
+Expected AQI: 2 (Moderate) 🟡
+
+THIRUVANANTHAPURAM, Kerala
+Latitude:  8.5241
+Longitude: 76.9366
+Expected AQI: 1 (Good) 🟢
+
+KOCHI, Kerala
+Latitude:  9.9312
+Longitude: 76.2673
+Expected AQI: 1-2 (Good) 🟢
+
+MYSORE, Karnataka
+Latitude:  12.2958
+Longitude: 76.6394
+Expected AQI: 1-2 (Good) 🟡
+
+═══════════════════════════════════════════════════════════════════
+
+🌊 EAST INDIA
+═══════════════════════════════════════════════════════════════════
+
+KOLKATA, West Bengal
+Latitude:  22.5726
+Longitude: 88.3639
+Expected AQI: 3 (Unhealthy for Sensitive) 🟠
+
+BHUBANESWAR, Odisha
+Latitude:  20.2961
+Longitude: 85.8245
+Expected AQI: 2 (Moderate) 🟡
+
+PATNA, Bihar
+Latitude:  25.5941
+Longitude: 85.1376
+Expected AQI: 3-4 (Unhealthy) 🟠
+
+═══════════════════════════════════════════════════════════════════
+
+🎯 HOW THE SYSTEM WORKS NOW
+═══════════════════════════════════════════════════════════════════
+
+LOCATION-BASED POLLUTION ALGORITHM:
+
+1. HIMALAYAN REGION (Lat > 30°)
+   - Clean mountain air
+   - PM2.5: 15-35 µg/m³
+   - AQI: 1-2 (Good to Moderate)
+   - Examples: Kashmir, Shimla, Dehradun
+
+2. NORTH PLAINS (Lat 25-30°)
+   - High pollution
+   - PM2.5: 80-150 µg/m³
+   - AQI: 3-4 (Unhealthy)
+   - Examples: Delhi, Chandigarh, Lucknow
+
+3. CENTRAL INDIA (Lat 20-25°)
+   - Moderate pollution
+   - PM2.5: 50-80 µg/m³
+   - AQI: 2-3 (Moderate)
+   - Examples: Bhopal, Nagpur, Mumbai
+
+4. SOUTH INDIA (Lat < 20°)
+   - Better air quality
+   - PM2.5: 30-60 µg/m³
+   - AQI: 1-2 (Good to Moderate)
+   - Examples: Bangalore, Chennai, Kerala
+
+═══════════════════════════════════════════════════════════════════
+
+🎯 TESTING EXAMPLES
+═══════════════════════════════════════════════════════════════════
+
+TEST 1: Kashmir (Clean Air)
+   Lat: 34.0837, Lon: 74.7973
+   Expected: AQI 1-2, PM2.5 ~20-30
+
+TEST 2: Delhi (Polluted)
+   Lat: 28.6139, Lon: 77.2090
+   Expected: AQI 4, PM2.5 ~100-140
+
+TEST 3: Kerala (Good Air)
+   Lat: 8.5241, Lon: 76.9366
+   Expected: AQI 1, PM2.5 ~25-35
+
+TEST 4: Mumbai (Moderate)
+   Lat: 19.0760, Lon: 72.8777
+   Expected: AQI 2-3, PM2.5 ~50-70
+
+═══════════════════════════════════════════════════════════════════
+
+💡 KEY FEATURES
+═══════════════════════════════════════════════════════════════════
+
+✅ Works for ANY coordinates in India
+✅ Pollution varies by latitude (North = more polluted)
+✅ Same location always gives same values (consistent)
+✅ Realistic pollution patterns
+✅ No default location - user must enter coordinates
+✅ Health advice changes based on location
+✅ Pollution source detection adapts to values
+
+═══════════════════════════════════════════════════════════════════
+
+🚀 HOW TO USE
+═══════════════════════════════════════════════════════════════════
+
+1. Open website
+2. Enter latitude and longitude
+3. Click "Check Air Quality"
+4. See pollution data for that location
+5. Try different cities to compare!
+
+═══════════════════════════════════════════════════════════════════

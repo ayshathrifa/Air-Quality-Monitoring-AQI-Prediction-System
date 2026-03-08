@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts - Air Quality Monitoring</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">🌍 AQI Monitor</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/alerts" class="active">Alerts</a>
+                <a href="/info">Info</a>
+                <a href="/about">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>🚨 Air Quality Alerts</h1>
+            <p>Real-time warnings and notifications</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Current Alert Status -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>Current Alert Status</h2>
+                <div id="current-alert" class="alert-display">
+                    <p style="color: #999; font-style: italic;">Enter location to check alert status</p>
+                </div>
+                <div class="location-input" style="margin-top: 20px;">
+                    <div class="input-group">
+                        <label for="alert-lat">Latitude</label>
+                        <input type="number" id="alert-lat" placeholder="Enter Latitude" step="0.0001">
+                    </div>
+                    <div class="input-group">
+                        <label for="alert-lon">Longitude</label>
+                        <input type="number" id="alert-lon" placeholder="Enter Longitude" step="0.0001">
+                    </div>
+                    <button onclick="checkAlerts()" class="btn">Check Alerts</button>
+                </div>
+            </div>
+
+            <!-- Alert Levels Guide -->
+            <div class="card">
+                <h2>Alert Levels</h2>
+                <div class="alert-levels">
+                    <div class="alert-level" style="background: #00e400; color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                        <strong>🟢 No Alert (AQI 1-2)</strong>
+                        <p>Air quality is good. No health concerns.</p>
+                    </div>
+                    <div class="alert-level" style="background: #ff7e00; color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                        <strong>⚠️ Caution (AQI 3)</strong>
+                        <p>Sensitive groups should limit outdoor activities.</p>
+                    </div>
+                    <div class="alert-level" style="background: #ff0000; color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                        <strong>🚨 Warning (AQI 4)</strong>
+                        <p>Everyone should avoid prolonged outdoor activities.</p>
+                    </div>
+                    <div class="alert-level" style="background: #8f3f97; color: white; padding: 15px; border-radius: 8px;">
+                        <strong>🔴 Emergency (AQI 5)</strong>
+                        <p>Health alert! Stay indoors immediately.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="card">
+                <h2>🔔 Notification Settings</h2>
+                <p>Enable browser notifications to get alerts when AQI becomes unhealthy.</p>
+                <button onclick="testNotification()" class="btn" style="margin-top: 15px;">🔔 Test Notification</button>
+                <p class="hint" style="margin-top: 10px;">Notifications appear when AQI ≥ 4</p>
+            </div>
+
+            <!-- Recent Alerts History -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>📋 Recent Alerts History</h2>
+                <div id="alert-history">
+                    <p style="color: #999; font-style: italic;">No recent alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        async function checkAlerts() {
+            const lat = document.getElementById('alert-lat').value;
+            const lon = document.getElementById('alert-lon').value;
+            const alertDiv = document.getElementById('current-alert');
+            
+            if (!lat || !lon) {
+                alert('Please enter both latitude and longitude');
+                return;
+            }
+            
+            alertDiv.innerHTML = '<p>Checking...</p>';
+            
+            try {
+                const response = await fetch(`/api/current?lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+                
+                const aqi = data.predicted_aqi;
+                const colors = {1: '#00e400', 2: '#ffff00', 3: '#ff7e00', 4: '#ff0000', 5: '#8f3f97'};
+                const icons = {1: '🟢', 2: '🟡', 3: '⚠️', 4: '🚨', 5: '🔴'};
+                
+                let alertMessage = '';
+                if (aqi <= 2) {
+                    alertMessage = 'No alert. Air quality is good.';
+                } else if (aqi === 3) {
+                    alertMessage = 'CAUTION: Sensitive groups should limit outdoor activities.';
+                } else if (aqi === 4) {
+                    alertMessage = 'WARNING: Avoid prolonged outdoor activities. Wear N95 mask.';
+                } else {
+                    alertMessage = 'EMERGENCY: Stay indoors! Health alert for everyone.';
+                }
+                
+                alertDiv.innerHTML = `
+                    <div style="background: ${colors[aqi]}; padding: 40px; border-radius: 15px; color: white; text-align: center;">
+                        <div style="font-size: 5em;">${icons[aqi]}</div>
+                        <div style="font-size: 2.5em; font-weight: bold; margin-top: 20px;">AQI: ${aqi}</div>
+                        <div style="font-size: 1.5em; margin-top: 10px;">${data.aqi_info.label}</div>
+                        <div style="font-size: 1.2em; margin-top: 20px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                            ${alertMessage}
+                        </div>
+                    </div>
+                `;
+                
+                // Add to history
+                addToHistory(aqi, data.aqi_info.label, alertMessage);
+            } catch (error) {
+                alertDiv.innerHTML = '<p style=\"color: red;\">Error loading data</p>';
+            }
+        }
+        
+        function addToHistory(aqi, label, message) {
+            const historyDiv = document.getElementById('alert-history');
+            const timestamp = new Date().toLocaleString();
+            const colors = {1: '#00e400', 2: '#ffff00', 3: '#ff7e00', 4: '#ff0000', 5: '#8f3f97'};
+            
+            const entry = `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${colors[aqi]};">
+                    <strong>${timestamp}</strong> - AQI: ${aqi} (${label})<br>
+                    <span style="color: #666;">${message}</span>
+                </div>
+            `;
+            
+            if (historyDiv.innerHTML.includes('No recent alerts')) {
+                historyDiv.innerHTML = entry;
+            } else {
+                historyDiv.innerHTML = entry + historyDiv.innerHTML;
+            }
+        }
+    </script>
+</body>
+</html>
