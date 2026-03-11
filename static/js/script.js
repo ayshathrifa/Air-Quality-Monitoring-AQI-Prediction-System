@@ -17,9 +17,21 @@ if ('Notification' in window) {
 
 // Load data on page load
 window.addEventListener('DOMContentLoaded', () => {
-    // Don't load data automatically - wait for user input
+    // Load saved coordinates from localStorage
+    const savedLat = localStorage.getItem('currentLat');
+    const savedLon = localStorage.getItem('currentLon');
+    
+    if (savedLat && savedLon) {
+        currentLat = parseFloat(savedLat);
+        currentLon = parseFloat(savedLon);
+        document.getElementById('lat').value = savedLat;
+        document.getElementById('lon').value = savedLon;
+        refreshData();
+    } else {
+        resetAQIDisplay();
+    }
+    
     loadStats();
-    resetAQIDisplay();
     updateHealthAdvice(null);
     updatePollutionSource(null);
 });
@@ -112,6 +124,11 @@ function updateLocation() {
     if (lat && lon) {
         currentLat = parseFloat(lat);
         currentLon = parseFloat(lon);
+        
+        // Save to localStorage
+        localStorage.setItem('currentLat', lat);
+        localStorage.setItem('currentLon', lon);
+        
         console.log(`Location updated to: ${currentLat}, ${currentLon}`);
         
         // Show loading message
@@ -172,6 +189,9 @@ function displayPredictionResult(result) {
         <div style="margin-top: 10px;">${aqiInfo.description}</div>
         <div style="margin-top: 10px;">Confidence: ${confidence.toFixed(1)}%</div>
     `;
+    
+    // Trigger notification for unhealthy AQI
+    checkAQIAlert(aqiValue, aqiInfo.label);
 }
 
 async function loadStats() {
@@ -212,12 +232,35 @@ function updatePollutionSource(source) {
 
 // Advanced Feature 3: AQI Alert Notification
 function checkAQIAlert(aqi, label) {
-    if (aqi >= 4 && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('⚠️ AQI Alert', {
-            body: `Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`,
-            icon: '/static/icon.png',
-            badge: '/static/badge.png'
-        });
+    console.log('checkAQIAlert called:', aqi, label);
+    
+    if (aqi >= 4) {
+        if (!('Notification' in window)) {
+            console.log('Browser does not support notifications');
+            alert(`⚠️ AQI ALERT: Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`);
+            return;
+        }
+        
+        if (Notification.permission === 'granted') {
+            console.log('Showing notification...');
+            new Notification('⚠️ AQI Alert', {
+                body: `Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`
+            });
+        } else if (Notification.permission === 'default') {
+            console.log('Requesting notification permission...');
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification('⚠️ AQI Alert', {
+                        body: `Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`
+                    });
+                } else {
+                    alert(`⚠️ AQI ALERT: Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`);
+                }
+            });
+        } else {
+            console.log('Notification permission denied, showing alert');
+            alert(`⚠️ AQI ALERT: Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`);
+        }
     }
 }
 

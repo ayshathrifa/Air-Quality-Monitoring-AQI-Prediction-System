@@ -89,6 +89,36 @@
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
+        // Load saved coordinates on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedLat = localStorage.getItem('currentLat');
+            const savedLon = localStorage.getItem('currentLon');
+            
+            if (savedLat && savedLon) {
+                document.getElementById('alert-lat').value = savedLat;
+                document.getElementById('alert-lon').value = savedLon;
+            }
+            
+            // Load alert history from localStorage
+            loadAlertHistory();
+        });
+        
+        function loadAlertHistory() {
+            const historyDiv = document.getElementById('alert-history');
+            const savedHistory = localStorage.getItem('alertHistory');
+            
+            if (savedHistory) {
+                historyDiv.innerHTML = savedHistory;
+            } else {
+                historyDiv.innerHTML = '<p style="color: #999; font-style: italic;">No recent alerts</p>';
+            }
+        }
+        
+        function saveAlertHistory() {
+            const historyDiv = document.getElementById('alert-history');
+            localStorage.setItem('alertHistory', historyDiv.innerHTML);
+        }
+        
         async function checkAlerts() {
             const lat = document.getElementById('alert-lat').value;
             const lon = document.getElementById('alert-lon').value;
@@ -98,6 +128,10 @@
                 alert('Please enter both latitude and longitude');
                 return;
             }
+            
+            // Save to localStorage
+            localStorage.setItem('currentLat', lat);
+            localStorage.setItem('currentLon', lon);
             
             alertDiv.innerHTML = '<p>Checking...</p>';
             
@@ -133,6 +167,9 @@
                 
                 // Add to history
                 addToHistory(aqi, data.aqi_info.label, alertMessage);
+                
+                // Trigger automatic notification for unhealthy AQI
+                checkAQIAlert(aqi, data.aqi_info.label);
             } catch (error) {
                 alertDiv.innerHTML = '<p style=\"color: red;\">Error loading data</p>';
             }
@@ -155,6 +192,9 @@
             } else {
                 historyDiv.innerHTML = entry + historyDiv.innerHTML;
             }
+            
+            // Save history to localStorage
+            saveAlertHistory();
         }
     </script>
 </body>

@@ -1,10 +1,24 @@
 from flask import Flask, render_template, jsonify, request
+from flask_mail import Mail, Message
 from data_collector import AirQualityDataCollector
 from model_trainer import AQIPredictor
 import pandas as pd
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+
+# Email configuration
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+
+mail = Mail(app)
 
 collector = AirQualityDataCollector()
 predictor = AQIPredictor()
@@ -246,6 +260,40 @@ def download_data():
         return send_file(data_file, as_attachment=True, download_name='air_quality_data.csv')
     
     return jsonify({'error': 'No data available'}), 404
+
+@app.route('/api/send-feedback', methods=['POST'])
+def send_feedback():
+    """Send feedback email"""
+    try:
+        data = request.json
+        name = data.get('name')
+        email = data.get('email')
+        subject = data.get('subject')
+        message = data.get('message')
+        
+        # Create email message
+        msg = Message(
+            subject=f"Feedback: {subject}",
+            recipients=[os.getenv('RECEIVER_EMAIL')],
+            reply_to=email
+        )
+        
+        msg.body = f"""
+        New Feedback Received
+        
+        Name: {name}
+        Email: {email}
+        Subject: {subject}
+        
+        Message:
+        {message}
+        """
+        
+        mail.send(msg)
+        
+        return jsonify({'success': True, 'message': 'Feedback sent successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     os.makedirs('data', exist_ok=True)
