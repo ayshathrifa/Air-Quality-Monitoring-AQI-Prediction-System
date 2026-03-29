@@ -1,26 +1,29 @@
+// ── Tab Switching ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+    document.getElementById('tab-live').style.display = tab === 'live' ? 'block' : 'none';
+    document.getElementById('tab-manual').style.display = tab === 'manual' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', (i === 0 && tab === 'live') || (i === 1 && tab === 'manual'));
+    });
+    resetAQIDisplay();
+    document.getElementById('prediction-result').innerHTML = '';
+}
+
 let currentLat = null;
 let currentLon = null;
 let trendChart = null;
+let modelChart = null;
+let forecastChart = null;
+let seasonalChart = null;
 
-const AQI_COLORS = {
-    1: '#00e400',
-    2: '#ffff00',
-    3: '#ff7e00',
-    4: '#ff0000',
-    5: '#8f3f97'
-};
+const AQI_COLORS = { 1:'#00e400', 2:'#ffff00', 3:'#ff7e00', 4:'#ff0000', 5:'#8f3f97' };
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-// Advanced Feature 3: Request notification permission
-if ('Notification' in window) {
-    Notification.requestPermission();
-}
+if ('Notification' in window) Notification.requestPermission();
 
-// Load data on page load
 window.addEventListener('DOMContentLoaded', () => {
-    // Load saved coordinates from localStorage
     const savedLat = localStorage.getItem('currentLat');
     const savedLon = localStorage.getItem('currentLon');
-    
     if (savedLat && savedLon) {
         currentLat = parseFloat(savedLat);
         currentLon = parseFloat(savedLon);
@@ -30,10 +33,11 @@ window.addEventListener('DOMContentLoaded', () => {
     } else {
         resetAQIDisplay();
     }
-    
     loadStats();
-    updateHealthAdvice(null);
-    updatePollutionSource(null);
+    loadModelComparison();
+    loadForecast24h();
+    loadSeasonalTrends();
+    loadHeatmap();
 });
 
 async function refreshData() {
@@ -41,379 +45,391 @@ async function refreshData() {
         document.getElementById('aqi-label').textContent = 'Enter location coordinates';
         return;
     }
-    
     try {
-        console.log(`Fetching data for: ${currentLat}, ${currentLon}`);
-        const response = await fetch(`/api/current?lat=${currentLat}&lon=${currentLon}`);
-        const data = await response.json();
-        
-        console.log('Received data:', data);
-        
+        const res = await fetch(`/api/current?lat=${currentLat}&lon=${currentLon}`);
+        const data = await res.json();
         updateAQIDisplay(data);
         updatePollutants(data);
-        updateHealthAdvice(data.health_advice);
+        updateHealthRecommendation(data.health_recommendation);
         updatePollutionSource(data.pollution_source);
         loadStats();
         loadTrendChart();
-        loadForecast();
-        
-        // Show alert banner if AQI is unhealthy
         showAlertBanner(data.predicted_aqi, data.aqi_info.label);
-        
-        // Advanced Feature 3: AQI Notification
         checkAQIAlert(data.predicted_aqi, data.aqi_info.label);
-    } catch (error) {
-        console.error('Error fetching data:', error);
+    } catch (e) {
+        console.error('Error fetching data:', e);
     }
 }
 
 function updateAQIDisplay(data) {
-    const aqiValue = data.predicted_aqi || data.aqi;
-    const aqiInfo = data.aqi_info;
-    const confidence = data.confidence || 0;
-    
-    const aqiDisplay = document.getElementById('aqi-display');
-    aqiDisplay.style.backgroundColor = AQI_COLORS[aqiValue];
-    
-    document.getElementById('aqi-value').textContent = aqiValue;
-    document.getElementById('aqi-label').textContent = aqiInfo.label;
-    document.getElementById('aqi-description').textContent = aqiInfo.description;
-    document.getElementById('confidence').textContent = confidence.toFixed(1);
+    const aqi = data.predicted_aqi || data.aqi;
+    document.getElementById('aqi-display').style.backgroundColor = AQI_COLORS[aqi];
+    document.getElementById('aqi-value').textContent = aqi;
+    document.getElementById('aqi-label').textContent = data.aqi_info.label;
+    document.getElementById('aqi-description').textContent = data.aqi_info.description;
+    document.getElementById('confidence').textContent = (data.confidence || 0).toFixed(1);
 }
 
 function resetAQIDisplay() {
-    const aqiDisplay = document.getElementById('aqi-display');
-    aqiDisplay.style.backgroundColor = '#cccccc';
-    
+    document.getElementById('aqi-display').style.backgroundColor = '#cccccc';
     document.getElementById('aqi-value').textContent = '--';
-    document.getElementById('aqi-label').textContent = 'Enter location to check air quality';
+    document.getElementById('aqi-label').textContent = 'Enter location or pollutant values above';
     document.getElementById('aqi-description').textContent = '';
     document.getElementById('confidence').textContent = '--';
 }
 
 function updatePollutants(data) {
-    const thresholds = {
-        pm2_5: 12, pm10: 54, co: 500, no2: 40, o3: 100, so2: 20
-    };
-    
-    document.getElementById('pm2_5').textContent = data.pm2_5.toFixed(2);
-    document.getElementById('pm10').textContent = data.pm10.toFixed(2);
-    document.getElementById('co').textContent = data.co.toFixed(2);
-    document.getElementById('no2').textContent = data.no2.toFixed(2);
-    document.getElementById('o3').textContent = data.o3.toFixed(2);
-    document.getElementById('so2').textContent = data.so2.toFixed(2);
-    
-    // Update threshold bars
-    updateThresholdBar('pm25-bar', data.pm2_5, thresholds.pm2_5 * 3);
-    updateThresholdBar('pm10-bar', data.pm10, thresholds.pm10 * 3);
-    updateThresholdBar('co-bar', data.co, thresholds.co * 2);
-    updateThresholdBar('no2-bar', data.no2, thresholds.no2 * 2);
-    updateThresholdBar('o3-bar', data.o3, thresholds.o3 * 2);
-    updateThresholdBar('so2-bar', data.so2, thresholds.so2 * 3);
+    const maxVals = { pm2_5: 36, pm10: 162, co: 1000, no2: 80, o3: 200, so2: 60 };
+    ['pm2_5','pm10','co','no2','o3','so2'].forEach(k => {
+        document.getElementById(k).textContent = data[k].toFixed(2);
+    });
+    updateThresholdBar('pm25-bar', data.pm2_5, maxVals.pm2_5);
+    updateThresholdBar('pm10-bar', data.pm10, maxVals.pm10);
+    updateThresholdBar('co-bar', data.co, maxVals.co);
+    updateThresholdBar('no2-bar', data.no2, maxVals.no2);
+    updateThresholdBar('o3-bar', data.o3, maxVals.o3);
+    updateThresholdBar('so2-bar', data.so2, maxVals.so2);
 }
 
 function updateThresholdBar(id, value, max) {
-    const percentage = Math.min((value / max) * 100, 100);
-    document.getElementById(id).style.width = percentage + '%';
+    document.getElementById(id).style.width = Math.min((value / max) * 100, 100) + '%';
+}
+
+function updateHealthRecommendation(rec) {
+    const div = document.getElementById('health-rec');
+    if (!rec) {
+        div.innerHTML = '<p style="color:#999;font-style:italic;">Enter location to see personalized health recommendations</p>';
+        return;
+    }
+    div.innerHTML = `
+        <div class="health-rec-header" style="background:${rec.color}; color:${rec.color === '#ffff00' ? '#333' : 'white'}; padding:12px 16px; border-radius:8px; margin-bottom:12px;">
+            <span style="font-size:2em;">${rec.icon}</span>
+            <span style="font-size:1.3em; font-weight:bold; margin-left:10px;">${rec.level}</span>
+        </div>
+        <div class="health-rec-grid">
+            <div class="rec-item"><strong>General:</strong> ${rec.general}</div>
+            <div class="rec-item"><strong>Sensitive Groups:</strong> ${rec.sensitive}</div>
+            <div class="rec-item"><strong>Outdoor Activity:</strong> ${rec.outdoor}</div>
+            <div class="rec-item"><strong>Mask Advice:</strong> ${rec.mask}</div>
+        </div>`;
+}
+
+function updatePollutionSource(source) {
+    const div = document.getElementById('pollution-source');
+    if (!source) {
+        div.innerHTML = '<p style="color:#999;font-style:italic;">Enter location coordinates to analyze pollution sources</p>';
+        return;
+    }
+    div.innerHTML = `
+        <div class="source-name">${source.source}</div>
+        <div class="source-confidence">Confidence: ${source.confidence}%</div>`;
 }
 
 function updateLocation() {
     const lat = document.getElementById('lat').value;
     const lon = document.getElementById('lon').value;
-    
-    if (lat && lon) {
-        currentLat = parseFloat(lat);
-        currentLon = parseFloat(lon);
-        
-        // Save to localStorage
-        localStorage.setItem('currentLat', lat);
-        localStorage.setItem('currentLon', lon);
-        
-        console.log(`Location updated to: ${currentLat}, ${currentLon}`);
-        
-        // Show loading message
-        document.getElementById('aqi-label').textContent = 'Loading...';
-        
-        // Fetch new data
-        refreshData();
-    } else {
-        alert('Please enter both latitude and longitude');
-    }
+    if (!lat || !lon) { alert('Please enter both latitude and longitude'); return; }
+    currentLat = parseFloat(lat);
+    currentLon = parseFloat(lon);
+    localStorage.setItem('currentLat', lat);
+    localStorage.setItem('currentLon', lon);
+    document.getElementById('aqi-label').textContent = 'Loading...';
+    refreshData();
 }
 
 async function predictCustom() {
-    const data = {
-        pm2_5: document.getElementById('pred_pm2_5').value,
-        pm10: document.getElementById('pred_pm10').value,
-        co: document.getElementById('pred_co').value,
-        no2: document.getElementById('pred_no2').value,
-        o3: document.getElementById('pred_o3').value,
-        so2: document.getElementById('pred_so2').value
-    };
-    
-    // Validate inputs
-    for (let key in data) {
-        if (!data[key]) {
-            alert('Please fill all fields');
-            return;
-        }
+    const keys = ['pm2_5','pm10','co','no2','o3','so2'];
+    const data = {};
+    for (const k of keys) {
+        const v = document.getElementById('pred_' + k).value;
+        if (!v) { alert('Please fill all fields'); return; }
+        data[k] = v;
     }
-    
     try {
-        const response = await fetch('/api/predict', {
+        const res = await fetch('/api/predict', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        
-        const result = await response.json();
-        displayPredictionResult(result);
-    } catch (error) {
-        console.error('Error predicting:', error);
-    }
-}
-
-function displayPredictionResult(result) {
-    const resultDiv = document.getElementById('prediction-result');
-    const aqiValue = result.predicted_aqi;
-    const aqiInfo = result.aqi_info;
-    const confidence = result.confidence;
-    
-    resultDiv.style.backgroundColor = AQI_COLORS[aqiValue];
-    resultDiv.style.color = 'white';
-    resultDiv.innerHTML = `
-        <div style="font-size: 2em; font-weight: bold;">${aqiValue}</div>
-        <div style="font-size: 1.3em; margin-top: 10px;">${aqiInfo.label}</div>
-        <div style="margin-top: 10px;">${aqiInfo.description}</div>
-        <div style="margin-top: 10px;">Confidence: ${confidence.toFixed(1)}%</div>
-    `;
-    
-    // Trigger notification for unhealthy AQI
-    checkAQIAlert(aqiValue, aqiInfo.label);
+        const result = await res.json();
+        const aqi = result.predicted_aqi;
+        const rec = result.health_recommendation;
+        // Show result in shared aqi-display
+        updateAQIDisplay({ predicted_aqi: aqi, aqi: aqi, aqi_info: result.aqi_info, confidence: result.confidence });
+        // Also show health tip in prediction-result
+        const resultDiv = document.getElementById('prediction-result');
+        resultDiv.innerHTML = rec ? `<div class="rec-item" style="margin-top:8px;">${rec.outdoor} &nbsp;|&nbsp; ${rec.mask}</div>` : '';
+        checkAQIAlert(aqi, result.aqi_info.label);
+    } catch (e) { console.error(e); }
 }
 
 async function loadStats() {
     try {
-        const response = await fetch('/api/stats');
-        const stats = await response.json();
-        
-        document.getElementById('total-records').textContent = stats.total_records || 0;
-        document.getElementById('avg-pm2_5').textContent = (stats.avg_pm2_5 || 0).toFixed(2);
-        document.getElementById('avg-pm10').textContent = (stats.avg_pm10 || 0).toFixed(2);
-    } catch (error) {
-        console.error('Error loading stats:', error);
-    }
+        const res = await fetch('/api/stats');
+        const s = await res.json();
+        document.getElementById('total-records').textContent = s.total_records || 0;
+        document.getElementById('avg-pm2_5').textContent = (s.avg_pm2_5 || 0).toFixed(1);
+        document.getElementById('avg-pm10').textContent = (s.avg_pm10 || 0).toFixed(1);
+        document.getElementById('avg-aqi').textContent = (s.avg_aqi || 0).toFixed(1);
+    } catch (e) { console.error(e); }
 }
 
-// Advanced Feature 1: Update Health Advice
-function updateHealthAdvice(advice) {
-    const adviceDiv = document.getElementById('health-advice');
-    if (advice && advice.length > 0) {
-        adviceDiv.innerHTML = advice.map(item => `<p>• ${item}</p>`).join('');
-    } else {
-        adviceDiv.innerHTML = '<p style="color: #999; font-style: italic;">Enter location coordinates to see health recommendations</p>';
-    }
-}
+// ── Model Comparison ──────────────────────────────────────────────────────────
 
-// Advanced Feature 4: Update Pollution Source
-function updatePollutionSource(source) {
-    const sourceDiv = document.getElementById('pollution-source');
-    if (source) {
-        sourceDiv.innerHTML = `
-            <div class="source-name">${source.source}</div>
-            <div class="source-confidence">Confidence: ${source.confidence}%</div>
-        `;
-    } else {
-        sourceDiv.innerHTML = '<p style="color: #999; font-style: italic;">Enter location coordinates to analyze pollution sources</p>';
-    }
-}
+async function loadModelComparison() {
+    try {
+        const res = await fetch('/api/model-comparison');
+        const data = await res.json();
+        const names = Object.keys(data);
+        const accuracies = names.map(n => data[n].accuracy);
+        const cvAccuracies = names.map(n => data[n].cv_accuracy);
 
-// Advanced Feature 3: AQI Alert Notification
-function checkAQIAlert(aqi, label) {
-    console.log('checkAQIAlert called:', aqi, label);
-    
-    if (aqi >= 4) {
-        if (!('Notification' in window)) {
-            console.log('Browser does not support notifications');
-            alert(`⚠️ AQI ALERT: Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`);
-            return;
-        }
-        
-        if (Notification.permission === 'granted') {
-            console.log('Showing notification...');
-            new Notification('⚠️ AQI Alert', {
-                body: `Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`
-            });
-        } else if (Notification.permission === 'default') {
-            console.log('Requesting notification permission...');
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    new Notification('⚠️ AQI Alert', {
-                        body: `Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`
-                    });
-                } else {
-                    alert(`⚠️ AQI ALERT: Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`);
-                }
-            });
-        } else {
-            console.log('Notification permission denied, showing alert');
-            alert(`⚠️ AQI ALERT: Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`);
-        }
-    }
-}
+        // Table
+        const tableDiv = document.getElementById('model-comparison-table');
+        tableDiv.innerHTML = `
+            <table class="comparison-table">
+                <thead><tr><th>Model</th><th>Test Accuracy (%)</th><th>CV Accuracy (%)</th></tr></thead>
+                <tbody>${names.map((n, i) => `
+                    <tr class="${i === accuracies.indexOf(Math.max(...accuracies)) ? 'best-model' : ''}">
+                        <td>${n}</td><td>${accuracies[i]}</td><td>${cvAccuracies[i]}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>`;
 
-// Test notification function
-function testNotification() {
-    console.log('Test notification button clicked');
-    
-    if (!('Notification' in window)) {
-        alert('❌ This browser does not support notifications');
-        console.error('Notifications not supported');
-        return;
-    }
-    
-    console.log('Notification permission:', Notification.permission);
-    
-    if (Notification.permission === 'granted') {
-        console.log('Sending test notification...');
-        new Notification('🔔 Test Notification', {
-            body: 'Notifications are working! You will see alerts when AQI becomes unhealthy.',
-        });
-        alert('✅ Notification sent! Check top-right corner of your screen.');
-    } else if (Notification.permission !== 'denied') {
-        console.log('Requesting notification permission...');
-        Notification.requestPermission().then(permission => {
-            console.log('Permission result:', permission);
-            if (permission === 'granted') {
-                new Notification('🔔 Test Notification', {
-                    body: 'Notifications enabled! You will see alerts when AQI becomes unhealthy.',
-                });
-                alert('✅ Notification sent! Check top-right corner of your screen.');
-            } else {
-                alert('❌ Notification permission denied');
+        // Chart
+        const ctx = document.getElementById('modelChart').getContext('2d');
+        if (modelChart) modelChart.destroy();
+        modelChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [
+                    { label: 'Test Accuracy (%)', data: accuracies, backgroundColor: 'rgba(102,126,234,0.8)' },
+                    { label: 'CV Accuracy (%)', data: cvAccuracies, backgroundColor: 'rgba(118,75,162,0.6)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { min: 50, max: 100, title: { display: true, text: 'Accuracy (%)' } } },
+                plugins: { legend: { position: 'top' } }
             }
         });
-    } else {
-        alert('❌ Notifications are blocked. Please enable them in browser settings:\n\n1. Click the lock icon in address bar\n2. Find "Notifications"\n3. Change to "Allow"\n4. Refresh page');
-        console.error('Notifications blocked by user');
-    }
+    } catch (e) { console.error('Model comparison error:', e); }
 }
 
-// Advanced Feature 2: Pollution Trend Chart
-async function loadTrendChart() {
+// ── 24-Hour Forecast ──────────────────────────────────────────────────────────
+
+async function loadForecast24h() {
     try {
-        const response = await fetch('/api/trend');
-        const data = await response.json();
-        
-        if (data.pm2_5.length === 0) return;
-        
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        
-        if (trendChart) {
-            trendChart.destroy();
-        }
-        
-        trendChart = new Chart(ctx, {
-            type: 'line',
+        const res = await fetch('/api/forecast24h');
+        const data = await res.json();
+        if (!data.length) return;
+
+        const ctx = document.getElementById('forecastChart').getContext('2d');
+        if (forecastChart) forecastChart.destroy();
+
+        const aqiColors = data.map(d => AQI_COLORS[d.aqi]);
+        forecastChart = new Chart(ctx, {
+            type: 'bar',
             data: {
-                labels: data.timestamps.map((t, i) => `Record ${i + 1}`),
+                labels: data.map(d => `+${d.hour}h`),
                 datasets: [
                     {
-                        label: 'PM2.5',
-                        data: data.pm2_5,
-                        borderColor: '#ff6384',
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                        tension: 0.4
+                        label: 'Predicted PM2.5 (µg/m³)',
+                        data: data.map(d => d.pm2_5),
+                        backgroundColor: aqiColors,
+                        yAxisID: 'y'
                     },
                     {
-                        label: 'PM10',
-                        data: data.pm10,
-                        borderColor: '#36a2eb',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        tension: 0.4
+                        label: 'Predicted AQI',
+                        data: data.map(d => d.aqi),
+                        type: 'line',
+                        borderColor: '#333',
+                        backgroundColor: 'transparent',
+                        pointBackgroundColor: aqiColors,
+                        pointRadius: 5,
+                        yAxisID: 'y2'
                     }
                 ]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    title: {
-                        display: true,
-                        text: 'Pollutant Levels Over Time'
-                    }
-                },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'µg/m³'
-                        }
-                    }
-                }
+                    y: { title: { display: true, text: 'PM2.5 (µg/m³)' } },
+                    y2: { position: 'right', min: 0, max: 6, title: { display: true, text: 'AQI Category' }, grid: { drawOnChartArea: false } }
+                },
+                plugins: { legend: { position: 'top' } }
             }
         });
-    } catch (error) {
-        console.error('Error loading trend chart:', error);
-    }
+    } catch (e) { console.error('Forecast error:', e); }
 }
 
-// Alert Banner
+// ── Seasonal Trends ───────────────────────────────────────────────────────────
+
+async function loadSeasonalTrends() {
+    try {
+        const res = await fetch('/api/seasonal-trends');
+        const data = await res.json();
+        if (!data.length) return;
+
+        const ctx = document.getElementById('seasonalChart').getContext('2d');
+        if (seasonalChart) seasonalChart.destroy();
+
+        seasonalChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.month_name),
+                datasets: [
+                    {
+                        label: 'Avg PM2.5 (µg/m³)',
+                        data: data.map(d => d.avg_pm25),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255,99,132,0.15)',
+                        tension: 0.4, fill: true, yAxisID: 'y'
+                    },
+                    {
+                        label: 'Avg PM10 (µg/m³)',
+                        data: data.map(d => d.avg_pm10),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54,162,235,0.1)',
+                        tension: 0.4, fill: true, yAxisID: 'y'
+                    },
+                    {
+                        label: 'Avg AQI Category',
+                        data: data.map(d => d.avg_aqi),
+                        borderColor: '#8f3f97',
+                        backgroundColor: 'transparent',
+                        tension: 0.4, borderDash: [5,5], yAxisID: 'y2'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { title: { display: true, text: 'µg/m³' } },
+                    y2: { position: 'right', min: 0, max: 6, title: { display: true, text: 'AQI Category' }, grid: { drawOnChartArea: false } }
+                },
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+    } catch (e) { console.error('Seasonal trends error:', e); }
+}
+
+// ── Heatmap ───────────────────────────────────────────────────────────────────
+
+async function loadHeatmap() {
+    try {
+        const res = await fetch('/api/heatmap');
+        const data = await res.json();
+        if (!data.length) return;
+
+        // Build 7×24 matrix
+        const matrix = Array.from({ length: 7 }, () => new Array(24).fill(0));
+        data.forEach(d => { matrix[d.day][d.hour] = d.pm2_5; });
+
+        const allVals = data.map(d => d.pm2_5);
+        const minV = Math.min(...allVals);
+        const maxV = Math.max(...allVals);
+
+        const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+
+        let html = '<table class="heatmap-table"><thead><tr><th>Day \\ Hour</th>';
+        hours.forEach(h => { html += `<th>${h}</th>`; });
+        html += '</tr></thead><tbody>';
+
+        matrix.forEach((row, di) => {
+            html += `<tr><td class="heatmap-day">${DAYS[di]}</td>`;
+            row.forEach(val => {
+                const t = (val - minV) / (maxV - minV || 1);
+                const r = Math.round(255 * t);
+                const g = Math.round(255 * (1 - t));
+                html += `<td class="heatmap-cell" style="background:rgb(${r},${g},50);" title="${val} µg/m³"></td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        document.getElementById('heatmap-container').innerHTML = html;
+    } catch (e) { console.error('Heatmap error:', e); }
+}
+
+// ── Trend Chart ───────────────────────────────────────────────────────────────
+
+async function loadTrendChart() {
+    try {
+        const res = await fetch('/api/trend');
+        const data = await res.json();
+        if (!data.pm2_5 || !data.pm2_5.length) return;
+
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        if (trendChart) trendChart.destroy();
+
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.timestamps.map((_, i) => `Record ${i + 1}`),
+                datasets: [
+                    { label: 'PM2.5', data: data.pm2_5, borderColor: '#ff6384', backgroundColor: 'rgba(255,99,132,0.1)', tension: 0.4 },
+                    { label: 'PM10', data: data.pm10, borderColor: '#36a2eb', backgroundColor: 'rgba(54,162,235,0.1)', tension: 0.4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'µg/m³' } } }
+            }
+        });
+    } catch (e) { console.error('Trend chart error:', e); }
+}
+
+// ── Alerts & Notifications ────────────────────────────────────────────────────
+
 function showAlertBanner(aqi, label) {
     const banner = document.getElementById('alert-banner');
-    const message = document.getElementById('alert-message');
-    
+    const msg = document.getElementById('alert-message');
     if (aqi >= 3) {
-        let alertText = '';
-        if (aqi === 3) {
-            alertText = `⚠️ Air Quality Alert: ${label} - Sensitive groups should limit outdoor activities`;
-        } else if (aqi === 4) {
-            alertText = `🚨 Health Warning: ${label} - Avoid outdoor exercise and close windows`;
-        } else {
-            alertText = `🔴 SEVERE ALERT: ${label} - Stay indoors! Health emergency conditions`;
-        }
-        message.textContent = alertText;
+        const texts = {
+            3: `⚠️ Air Quality Alert: ${label} — Sensitive groups should limit outdoor activities`,
+            4: `🚨 Health Warning: ${label} — Avoid outdoor exercise and close windows`,
+            5: `🔴 SEVERE ALERT: ${label} — Stay indoors! Health emergency conditions`
+        };
+        msg.textContent = texts[aqi] || texts[5];
         banner.style.display = 'flex';
     } else {
         banner.style.display = 'none';
     }
 }
 
-function closeAlert() {
-    document.getElementById('alert-banner').style.display = 'none';
-}
+function closeAlert() { document.getElementById('alert-banner').style.display = 'none'; }
 
-// AQI Forecast
-async function loadForecast() {
-    try {
-        const response = await fetch('/api/forecast');
-        const forecast = await response.json();
-        
-        const panel = document.getElementById('forecast-panel');
-        
-        if (forecast.length > 0) {
-            panel.innerHTML = forecast.map(item => `
-                <div class="forecast-item">
-                    <div class="forecast-hour">+${item.hour}h</div>
-                    <div class="forecast-aqi">${item.aqi}</div>
-                </div>
-            `).join('');
-        } else {
-            panel.innerHTML = '<p style="color: #999; font-style: italic;">Enter location to see AQI forecast</p>';
-        }
-    } catch (error) {
-        console.error('Error loading forecast:', error);
+function checkAQIAlert(aqi, label) {
+    if (aqi < 4) return;
+    const body = `Air Quality is ${label}! AQI: ${aqi}\nAvoid outdoor activities.`;
+    if (!('Notification' in window)) { alert(`⚠️ AQI ALERT: ${body}`); return; }
+    if (Notification.permission === 'granted') {
+        new Notification('⚠️ AQI Alert', { body });
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(p => {
+            if (p === 'granted') new Notification('⚠️ AQI Alert', { body });
+            else alert(`⚠️ AQI ALERT: ${body}`);
+        });
+    } else {
+        alert(`⚠️ AQI ALERT: ${body}`);
     }
 }
 
-// Download Data
-function downloadData() {
-    window.location.href = '/api/download';
+function testNotification() {
+    if (!('Notification' in window)) { alert('❌ Browser does not support notifications'); return; }
+    if (Notification.permission === 'granted') {
+        new Notification('🔔 Test Notification', { body: 'Notifications are working!' });
+        alert('✅ Notification sent!');
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(p => {
+            if (p === 'granted') { new Notification('🔔 Test Notification', { body: 'Notifications enabled!' }); alert('✅ Notification sent!'); }
+            else alert('❌ Notification permission denied');
+        });
+    } else {
+        alert('❌ Notifications are blocked. Enable them in browser settings.');
+    }
 }
+
+function downloadData() { window.location.href = '/api/download'; }

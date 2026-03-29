@@ -3,6 +3,7 @@ flask-mail
 pandas
 numpy
 scikit-learn
+xgboost
 requests
 matplotlib
 seaborn
