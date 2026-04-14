@@ -23,43 +23,66 @@
     <div class="container">
         <header>
             <h1>🌍 Air Quality Monitoring System</h1>
-            <p>Real-Time AQI Prediction & Monitoring</p>
+            <p>Real-Time AQI Prediction · ML Model Comparison · Time-Series Forecasting</p>
         </header>
 
         <div class="main-content">
+
             <!-- Alert Banner -->
-            <div id="alert-banner" class="alert-banner" style="display: none;">
+            <div id="alert-banner" class="alert-banner" style="display:none;">
                 <span id="alert-message"></span>
                 <button onclick="closeAlert()" class="close-alert">×</button>
             </div>
 
-            <!-- Current AQI Display -->
+            <!-- Unified AQI Checker -->
             <div class="card aqi-card">
-                <h2>Current Air Quality Index</h2>
-                <div id="aqi-display" class="aqi-display">
+                <h2>🔍 AQI Checker</h2>
+
+                <!-- Tabs -->
+                <div class="checker-tabs">
+                    <button class="tab-btn active" onclick="switchTab('live')">📍 Live Check</button>
+                    <button class="tab-btn" onclick="switchTab('manual')">🔢 Manual Check</button>
+                </div>
+
+                <!-- Tab 1: Live Check -->
+                <div id="tab-live" class="tab-panel">
+                    <div class="location-input">
+                        <div class="input-group">
+                            <label for="lat">Latitude</label>
+                            <input type="number" id="lat" placeholder="e.g., 28.6139 for Delhi" step="0.0001">
+                        </div>
+                        <div class="input-group">
+                            <label for="lon">Longitude</label>
+                            <input type="number" id="lon" placeholder="e.g., 77.2090 for Delhi" step="0.0001">
+                        </div>
+                        <button onclick="updateLocation()" class="btn">📡 Fetch & Predict AQI</button>
+                    </div>
+                    <p class="hint">Fetches live pollutant data for the coordinates and predicts AQI using the best ML model</p>
+                </div>
+
+                <!-- Tab 2: Manual Check -->
+                <div id="tab-manual" class="tab-panel" style="display:none;">
+                    <div class="prediction-form">
+                        <input type="number" id="pred_pm2_5" placeholder="PM2.5 (µg/m³)" step="0.01">
+                        <input type="number" id="pred_pm10" placeholder="PM10 (µg/m³)" step="0.01">
+                        <input type="number" id="pred_co" placeholder="CO (µg/m³)" step="0.01">
+                        <input type="number" id="pred_no2" placeholder="NO₂ (µg/m³)" step="0.01">
+                        <input type="number" id="pred_o3" placeholder="O₃ (µg/m³)" step="0.01">
+                        <input type="number" id="pred_so2" placeholder="SO₂ (µg/m³)" step="0.01">
+                        <button onclick="predictCustom()" class="btn">🤖 Predict AQI</button>
+                    </div>
+                    <p class="hint">Enter your own sensor readings to get an instant AQI prediction — no location needed</p>
+                </div>
+
+                <!-- Shared AQI Result -->
+                <div id="aqi-display" class="aqi-display" style="margin-top:20px;">
                     <div class="aqi-value" id="aqi-value">--</div>
-                    <div class="aqi-label" id="aqi-label">Loading...</div>
+                    <div class="aqi-label" id="aqi-label">Enter location or pollutant values above</div>
                     <div class="aqi-description" id="aqi-description"></div>
                     <div class="confidence">Confidence: <span id="confidence">--</span>%</div>
                 </div>
-                <button onclick="refreshData()" class="btn">🔄 Refresh Data</button>
-            </div>
-
-            <!-- Location Input -->
-            <div class="card">
-                <h2>📍 Location</h2>
-                <div class="location-input">
-                    <div class="input-group">
-                        <label for="lat">Latitude</label>
-                        <input type="number" id="lat" placeholder="Enter Latitude (e.g., 34.0837 for Kashmir)" value="" step="0.0001">
-                    </div>
-                    <div class="input-group">
-                        <label for="lon">Longitude</label>
-                        <input type="number" id="lon" placeholder="Enter Longitude (e.g., 74.7973 for Kashmir)" value="" step="0.0001">
-                    </div>
-                    <button onclick="updateLocation()" class="btn">Check Air Quality</button>
-                </div>
-                <p class="hint">Enter coordinates of any location in India</p>
+                <div id="prediction-result" class="prediction-result"></div>
+                <button onclick="refreshData()" class="btn" style="margin-top:12px;">🔄 Refresh</button>
             </div>
 
             <!-- Pollutant Levels -->
@@ -70,72 +93,61 @@
                         <span class="pollutant-name">PM2.5</span>
                         <span class="pollutant-value" id="pm2_5">--</span>
                         <span class="pollutant-unit">µg/m³</span>
-                        <div class="threshold-bar">
-                            <div class="threshold-fill" id="pm25-bar"></div>
-                        </div>
-                        <span class="threshold-text">Safe: <12</span>
+                        <div class="threshold-bar"><div class="threshold-fill" id="pm25-bar"></div></div>
+                        <span class="threshold-text">Safe: &lt;12</span>
                     </div>
                     <div class="pollutant">
                         <span class="pollutant-name">PM10</span>
                         <span class="pollutant-value" id="pm10">--</span>
                         <span class="pollutant-unit">µg/m³</span>
-                        <div class="threshold-bar">
-                            <div class="threshold-fill" id="pm10-bar"></div>
-                        </div>
-                        <span class="threshold-text">Safe: <54</span>
+                        <div class="threshold-bar"><div class="threshold-fill" id="pm10-bar"></div></div>
+                        <span class="threshold-text">Safe: &lt;54</span>
                     </div>
                     <div class="pollutant">
                         <span class="pollutant-name">CO</span>
                         <span class="pollutant-value" id="co">--</span>
                         <span class="pollutant-unit">µg/m³</span>
-                        <div class="threshold-bar">
-                            <div class="threshold-fill" id="co-bar"></div>
-                        </div>
-                        <span class="threshold-text">Safe: <500</span>
+                        <div class="threshold-bar"><div class="threshold-fill" id="co-bar"></div></div>
+                        <span class="threshold-text">Safe: &lt;500</span>
                     </div>
                     <div class="pollutant">
                         <span class="pollutant-name">NO₂</span>
                         <span class="pollutant-value" id="no2">--</span>
                         <span class="pollutant-unit">µg/m³</span>
-                        <div class="threshold-bar">
-                            <div class="threshold-fill" id="no2-bar"></div>
-                        </div>
-                        <span class="threshold-text">Safe: <40</span>
+                        <div class="threshold-bar"><div class="threshold-fill" id="no2-bar"></div></div>
+                        <span class="threshold-text">Safe: &lt;40</span>
                     </div>
                     <div class="pollutant">
                         <span class="pollutant-name">O₃</span>
                         <span class="pollutant-value" id="o3">--</span>
                         <span class="pollutant-unit">µg/m³</span>
-                        <div class="threshold-bar">
-                            <div class="threshold-fill" id="o3-bar"></div>
-                        </div>
-                        <span class="threshold-text">Safe: <100</span>
+                        <div class="threshold-bar"><div class="threshold-fill" id="o3-bar"></div></div>
+                        <span class="threshold-text">Safe: &lt;100</span>
                     </div>
                     <div class="pollutant">
                         <span class="pollutant-name">SO₂</span>
                         <span class="pollutant-value" id="so2">--</span>
                         <span class="pollutant-unit">µg/m³</span>
-                        <div class="threshold-bar">
-                            <div class="threshold-fill" id="so2-bar"></div>
-                        </div>
-                        <span class="threshold-text">Safe: <20</span>
+                        <div class="threshold-bar"><div class="threshold-fill" id="so2-bar"></div></div>
+                        <span class="threshold-text">Safe: &lt;20</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Custom Prediction -->
+            <!-- Health Recommendation -->
             <div class="card">
-                <h2>🔮 Custom AQI Prediction</h2>
-                <div class="prediction-form">
-                    <input type="number" id="pred_pm2_5" placeholder="PM2.5" step="0.01">
-                    <input type="number" id="pred_pm10" placeholder="PM10" step="0.01">
-                    <input type="number" id="pred_co" placeholder="CO" step="0.01">
-                    <input type="number" id="pred_no2" placeholder="NO₂" step="0.01">
-                    <input type="number" id="pred_o3" placeholder="O₃" step="0.01">
-                    <input type="number" id="pred_so2" placeholder="SO₂" step="0.01">
-                    <button onclick="predictCustom()" class="btn">Predict AQI</button>
+                <h2>🏥 Health Recommendation</h2>
+                <div id="health-rec" class="health-rec">
+                    <p style="color:var(--text-muted);font-style:italic;">Enter location to see personalized health recommendations</p>
                 </div>
-                <div id="prediction-result" class="prediction-result"></div>
+            </div>
+
+            <!-- Pollution Source -->
+            <div class="card">
+                <h2>🔍 Pollution Source Analysis</h2>
+                <div id="pollution-source" class="pollution-source">
+                    <p style="color:var(--text-muted);font-style:italic;">Enter location coordinates to analyze pollution sources</p>
+                </div>
             </div>
 
             <!-- Statistics -->
@@ -154,55 +166,57 @@
                         <span class="stat-label">Avg PM10</span>
                         <span class="stat-value" id="avg-pm10">0</span>
                     </div>
+                    <div class="stat">
+                        <span class="stat-label">Avg AQI</span>
+                        <span class="stat-value" id="avg-aqi">0</span>
+                    </div>
                 </div>
-                <button onclick="downloadData()" class="btn" style="margin-top: 15px;">💾 Download Data (CSV)</button>
+                <button onclick="downloadData()" class="btn" style="margin-top:15px;">💾 Download Data (CSV)</button>
             </div>
 
-            <!-- AQI Forecast Panel -->
-            <div class="card">
-                <h2>🔮 AQI Forecast</h2>
-                <div id="forecast-panel" class="forecast-panel">
-                    <p style="color: #999; font-style: italic;">Enter location to see AQI forecast</p>
-                </div>
-            </div>
-
-            <!-- Advanced Feature 1: Health Advice -->
-            <div class="card">
-                <h2>🏥 Health Advisory</h2>
-                <div id="health-advice" class="health-advice">
-                    <p style="color: #999; font-style: italic;">Enter location coordinates to see health recommendations</p>
-                </div>
-            </div>
-
-            <!-- Advanced Feature 3: Notification Test -->
-            <div class="card">
-                <h2>🔔 Notification System</h2>
-                <p>Test browser notifications:</p>
-                <button onclick="testNotification()" class="btn">🔔 Test Notification</button>
-                <p class="hint" style="margin-top: 10px;">Notifications appear when AQI ≥ 4 (Unhealthy)</p>
-            </div>
-
-            <!-- Advanced Feature 4: Pollution Source -->
-            <div class="card">
-                <h2>🔍 Pollution Source Analysis</h2>
-                <div id="pollution-source" class="pollution-source">
-                    <p style="color: #999; font-style: italic;">Enter location coordinates to analyze pollution sources</p>
-                </div>
-            </div>
-
-            <!-- Advanced Feature 2: Trend Chart -->
+            <!-- ML Model Comparison -->
             <div class="card" style="grid-column: 1 / -1;">
-                <h2>📈 Pollution Trend Analysis</h2>
-                <canvas id="trendChart" style="max-height: 300px;"></canvas>
+                <h2>🤖 ML Model Comparison</h2>
+                <p class="hint" style="margin-bottom:12px;">Comparing Random Forest, Gradient Boosting, Logistic Regression & XGBoost on the same dataset</p>
+                <div id="model-comparison-table" style="overflow-x:auto;"></div>
+                <canvas id="modelChart" style="max-height:280px; margin-top:20px;"></canvas>
             </div>
+
+            <!-- 24-Hour Forecast -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>⏱️ 24-Hour AQI Forecast</h2>
+                <p class="hint" style="margin-bottom:12px;">Time-series projection using rolling mean with diurnal pattern</p>
+                <canvas id="forecastChart" style="max-height:280px;"></canvas>
+            </div>
+
+            <!-- Seasonal Trend -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>📅 Seasonal Trend Analysis</h2>
+                <p class="hint" style="margin-bottom:12px;">Monthly average PM2.5 and AQI — based on 365-day historical dataset</p>
+                <canvas id="seasonalChart" style="max-height:280px;"></canvas>
+            </div>
+
+            <!-- Pollution Heatmap -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>🗺️ Pollution Heatmap — Day × Hour</h2>
+                <p class="hint" style="margin-bottom:12px;">Average PM2.5 by day of week and hour of day</p>
+                <div id="heatmap-container" style="overflow-x:auto;"></div>
+            </div>
+
+            <!-- Recent Trend -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>📈 Recent Pollution Trend</h2>
+                <canvas id="trendChart" style="max-height:300px;"></canvas>
+            </div>
+
         </div>
 
         <footer>
-            <p>Air Quality Monitoring System | Developed with Machine Learning</p>
+            <p>Air Quality Monitoring System | ML Pipeline: Data Collection → SQLite → Multi-Model Training → Forecasting</p>
         </footer>
     </div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
